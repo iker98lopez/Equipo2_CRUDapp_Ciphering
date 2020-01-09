@@ -5,11 +5,11 @@
  */
 package equipo2_crudapp_ciphering;
 
-import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.MessageDigest;
@@ -19,7 +19,6 @@ import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.Arrays;
 import java.util.logging.Logger;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -32,7 +31,7 @@ import javax.crypto.NoSuchPaddingException;
  * @author iker lopez carrillo
  */
 public class CipheringManager {
-    
+
     private static final Logger LOGGER = Logger.getLogger("equipo2_crudapp_ciphering.HashCipher");
 
     /**
@@ -42,21 +41,21 @@ public class CipheringManager {
      * @return hashing of the text received.
      */
     public String hashCipher(String text) {
-        
+
         MessageDigest messageDigest;
         byte hash[] = null;
-        
+
         try {
             byte dataBytes[] = text.getBytes();
-            
+
             messageDigest = MessageDigest.getInstance("MD5");
             messageDigest.update(dataBytes);
-            
+
             hash = messageDigest.digest();
         } catch (NoSuchAlgorithmException exception) {
             LOGGER.warning("There was an error while ciphering. " + exception.getMessage());
         }
-        
+
         return hexadecimalConverter(hash);
     }
 
@@ -66,33 +65,20 @@ public class CipheringManager {
      * @param text String to cipher.
      * @return ciphered String.
      */
-    public String cipherText(String text) {
+    public byte[] cipherText(String text) {
         byte[] encodedMessage = null;
-        BufferedReader in = null;
         try {
-            in = new BufferedReader(new InputStreamReader(new FileInputStream(new File("public.key"))));
-            
-            X509EncodedKeySpec spec = new X509EncodedKeySpec(in.readLine().getBytes());
+            X509EncodedKeySpec spec = new X509EncodedKeySpec(fileReader("public.key"));
             KeyFactory keyFactory = KeyFactory.getInstance("RSA");
             PublicKey publicKey = keyFactory.generatePublic(spec);
-            
+
             Cipher cipher = Cipher.getInstance("RSA");
             cipher.init(Cipher.ENCRYPT_MODE, publicKey);
             encodedMessage = cipher.doFinal(text.getBytes());
-        } catch (IOException exception) {
-            LOGGER.warning("There was an error trying to find the private key. " + exception.getMessage());
         } catch (InvalidKeyException | NoSuchAlgorithmException | InvalidKeySpecException | BadPaddingException | IllegalBlockSizeException | NoSuchPaddingException exception) {
-            LOGGER.warning("There was an error trying to cipher the text. " + exception.getMessage());
-        } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException exception) {
-                    LOGGER.warning("There was an error trying to close the key file. " + exception.getMessage());
-                }
-            }
+            LOGGER.warning("There was an error trying to cipher the text. " + exception.getClass() + " " + exception.getMessage());
         }
-        return Arrays.toString(encodedMessage);
+        return encodedMessage;
     }
 
     /**
@@ -101,39 +87,26 @@ public class CipheringManager {
      * @param text String to decipher.
      * @return deciphered String.
      */
-    public String decipherText(String text) {
+    public byte[] decipherText(byte[] text) {
         byte[] decodedMessage = null;
-        BufferedReader in = null;
         try {
-            in = new BufferedReader(new InputStreamReader(new FileInputStream(new File("private.key"))));
-            
-            PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(in.readLine().getBytes());
+            PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(fileReader("private.key"));
             KeyFactory keyFactory = KeyFactory.getInstance("RSA");
             PrivateKey privateKey = keyFactory.generatePrivate(spec);
-            
+
             Cipher cipher = Cipher.getInstance("RSA");
             cipher.init(Cipher.DECRYPT_MODE, privateKey);
-            decodedMessage = cipher.doFinal(text.getBytes());
-        }  catch (IOException exception) {
-            LOGGER.warning("There was an error trying to find the public key. " + exception.getMessage());
+            decodedMessage = cipher.doFinal(text);
         } catch (InvalidKeyException | NoSuchAlgorithmException | InvalidKeySpecException | BadPaddingException | IllegalBlockSizeException | NoSuchPaddingException exception) {
-            LOGGER.warning("There was an error trying to decipher the text. " + exception.getMessage());
-        } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException exception) {
-                    LOGGER.warning("There was an error trying to close the key file. " + exception.getMessage());
-                }
-            }
+            LOGGER.warning("There was an error trying to decipher the text. " + exception.getClass() + " " + exception.getMessage());
         }
-        
-        return Arrays.toString(decodedMessage);
+
+        return decodedMessage;
     }
-    
+
     /**
      * This method converts the ciphered text received to an hexadecimal String.
-     * 
+     *
      * @param cipheredText text to convert.
      * @return converted text in hexadecimal.
      */
@@ -148,20 +121,46 @@ public class CipheringManager {
         }
         return HEX.toUpperCase();
     }
-    
-    public static void main(String[] args) {
-        CipheringManager cipheringManager = new CipheringManager();
-        
-        String message = "Mensaje";
-        LOGGER.info(message);
-        
-        message = cipheringManager.cipherText(message);
-        LOGGER.info(message);
-        
-        message = cipheringManager.decipherText(message);
-        LOGGER.info(message);
-        
-        String messageHash = cipheringManager.hashCipher(message);
-        LOGGER.info(messageHash);
+
+    /**
+     * This method reads the file in the path it receives and returns it as a
+     * byte array.
+     *
+     * @param path Path of the file.
+     * @return Byte array with the contents of the file.
+     */
+    private byte[] fileReader(String path) {
+        File file = new File(path);
+        ByteArrayOutputStream out = null;
+        InputStream in = null;
+
+        try {
+            byte[] buffer = new byte[4096];
+            out = new ByteArrayOutputStream();
+            in = new FileInputStream(file);
+            int read = 0;
+            while ((read = in.read(buffer)) != -1) {
+                out.write(buffer, 0, read);
+            }
+        } catch (IOException exception) {
+            LOGGER.warning("There was an error trying to read the key file. " + exception.getMessage());
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException exception) {
+                    LOGGER.warning("There was an error trying to close the key file. " + exception.getMessage());
+                }
+            }
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (IOException exception) {
+                    LOGGER.warning("There was an error trying to close the key file. " + exception.getMessage());
+                }
+            }
+        }
+
+        return out.toByteArray();
     }
 }

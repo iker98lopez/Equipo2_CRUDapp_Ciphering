@@ -4,6 +4,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -46,7 +47,7 @@ public class KeyGenerator {
             fileOutputStream = new FileOutputStream("private.key");
             fileOutputStream.write(pKCS8EncodedKeySpec.getEncoded());
             fileOutputStream.close();
-        } catch (Exception exception) {
+        } catch (IOException | NoSuchAlgorithmException exception) {
             LOGGER.warning("There was an error while trying to generate the keys. " + exception.getMessage());
         } finally {
             try {
