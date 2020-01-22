@@ -40,7 +40,7 @@ public class CipheringManager {
      * @param text String to be ciphered.
      * @return hashing of the text received.
      */
-    public String hashCipher(String text) {
+    public static String hashCipher(String text) {
 
         MessageDigest messageDigest;
         byte hash[] = null;
@@ -65,7 +65,7 @@ public class CipheringManager {
      * @param text String to cipher.
      * @return ciphered String.
      */
-    public byte[] cipherText(String text) {
+    public static byte[] cipherText(String text) {
         byte[] encodedMessage = null;
         try {
             X509EncodedKeySpec spec = new X509EncodedKeySpec(fileReader("public.key"));
@@ -87,7 +87,7 @@ public class CipheringManager {
      * @param text String to decipher.
      * @return deciphered String.
      */
-    public byte[] decipherText(byte[] text) {
+    public static byte[] decipherText(byte[] text) {
         byte[] decodedMessage = null;
         try {
             PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(fileReader("private.key"));
@@ -110,7 +110,7 @@ public class CipheringManager {
      * @param cipheredText text to convert.
      * @return converted text in hexadecimal.
      */
-    private String hexadecimalConverter(byte[] cipheredText) {
+    private static String hexadecimalConverter(byte[] cipheredText) {
         String HEX = "";
         for (int i = 0; i < cipheredText.length; i++) {
             String h = Integer.toHexString(cipheredText[i] & 0xFF);
@@ -129,7 +129,7 @@ public class CipheringManager {
      * @param path Path of the file.
      * @return Byte array with the contents of the file.
      */
-    private byte[] fileReader(String path) {
+    public static byte[] fileReader(String path) {
         File file = new File(path);
         ByteArrayOutputStream out = null;
         InputStream in = null;

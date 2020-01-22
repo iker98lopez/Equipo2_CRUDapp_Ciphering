@@ -10,6 +10,7 @@ import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.logging.Logger;
+import static javafx.application.Application.launch;
 
 /**
  * This class generates a key pair and generates the files private.key and
@@ -47,6 +48,10 @@ public class KeyGenerator {
             fileOutputStream = new FileOutputStream("private.key");
             fileOutputStream.write(pKCS8EncodedKeySpec.getEncoded());
             fileOutputStream.close();
+            
+            fileOutputStream = new FileOutputStream("credentials.dat");
+            fileOutputStream.write(CipheringManager.cipherText("abcd*1234"));
+            fileOutputStream.close();
         } catch (IOException | NoSuchAlgorithmException exception) {
             LOGGER.warning("There was an error while trying to generate the keys. " + exception.getMessage());
         } finally {
@@ -60,7 +65,16 @@ public class KeyGenerator {
         }
     }
 
+    /**
+     * Main function of the class. It generates a new key pair and shows a
+     * message on the logger.
+     *
+     * @param args the command line arguments.
+     */
     public static void main(String[] args) {
+        
+        launch(args);
+        
         KeyGenerator keyGenerator = new KeyGenerator();
         keyGenerator.generateKeyPair();
         
