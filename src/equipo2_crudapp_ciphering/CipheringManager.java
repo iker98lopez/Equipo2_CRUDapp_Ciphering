@@ -87,7 +87,7 @@ public class CipheringManager {
      * @param text String to decipher.
      * @return deciphered String.
      */
-    public static byte[] decipherText(byte[] text) {
+    public static byte[] decipherText(byte[] text, String path) {
         byte[] decodedMessage = null;
         try {
             PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(fileReader("private.key"));

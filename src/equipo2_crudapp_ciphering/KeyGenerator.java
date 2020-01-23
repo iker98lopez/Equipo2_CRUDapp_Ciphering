@@ -10,7 +10,9 @@ import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.logging.Logger;
+import javafx.application.Application;
 import static javafx.application.Application.launch;
+import javafx.stage.Stage;
 
 /**
  * This class generates a key pair and generates the files private.key and
@@ -18,7 +20,7 @@ import static javafx.application.Application.launch;
  *
  * @author iker lopez carrillo
  */
-public class KeyGenerator {
+public class KeyGenerator extends Application{
 
     private static final Logger LOGGER = Logger.getLogger("equipo2_crudapp_ciphering.KeyGenerator");
 
@@ -72,12 +74,16 @@ public class KeyGenerator {
      * @param args the command line arguments.
      */
     public static void main(String[] args) {
-        
         launch(args);
-        
+    }
+
+    @Override
+    public void start(Stage primaryStage) throws Exception {
         KeyGenerator keyGenerator = new KeyGenerator();
         keyGenerator.generateKeyPair();
         
         LOGGER.info("Key pair generated successfully");
+        
+        System.exit(0);
     }
 }
