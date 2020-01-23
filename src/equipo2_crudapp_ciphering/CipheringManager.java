@@ -40,13 +40,13 @@ public class CipheringManager {
      * @param text String to be ciphered.
      * @return hashing of the text received.
      */
-    public static String hashCipher(String text) {
+    public static String hashCipher(byte[] text) {
 
         MessageDigest messageDigest;
         byte hash[] = null;
 
         try {
-            byte dataBytes[] = text.getBytes();
+            byte dataBytes[] = text;
 
             messageDigest = MessageDigest.getInstance("MD5");
             messageDigest.update(dataBytes);
@@ -56,7 +56,7 @@ public class CipheringManager {
             LOGGER.warning("There was an error while ciphering. " + exception.getMessage());
         }
 
-        return hexadecimalConverter(hash);
+        return byteToHex(hash);
     }
 
     /**
@@ -65,20 +65,20 @@ public class CipheringManager {
      * @param text String to cipher.
      * @return ciphered String.
      */
-    public static byte[] cipherText(String text) {
+    public static String cipherText(String text) {
         byte[] encodedMessage = null;
         try {
-            X509EncodedKeySpec spec = new X509EncodedKeySpec(fileReader("public.key"));
+            X509EncodedKeySpec spec = new X509EncodedKeySpec(fileReader("C:\\Users\\iker lopez carrillo\\Documents\\NetBeansProjects\\Equipo2_CRUDapp_Server\\src\\java\\equipo2_crudapp_server\\ciphering\\public.key"));
             KeyFactory keyFactory = KeyFactory.getInstance("RSA");
             PublicKey publicKey = keyFactory.generatePublic(spec);
 
             Cipher cipher = Cipher.getInstance("RSA");
             cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-            encodedMessage = cipher.doFinal(text.getBytes());
+            encodedMessage = cipher.doFinal(hexToByte(text));
         } catch (InvalidKeyException | NoSuchAlgorithmException | InvalidKeySpecException | BadPaddingException | IllegalBlockSizeException | NoSuchPaddingException exception) {
             LOGGER.warning("There was an error trying to cipher the text. " + exception.getClass() + " " + exception.getMessage());
         }
-        return encodedMessage;
+        return byteToHex(encodedMessage);
     }
 
     /**
@@ -87,16 +87,16 @@ public class CipheringManager {
      * @param text String to decipher.
      * @return deciphered String.
      */
-    public static byte[] decipherText(byte[] text, String path) {
+    public static byte[] decipherText(String text) {
         byte[] decodedMessage = null;
         try {
-            PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(fileReader("private.key"));
+            PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(fileReader("C:\\Users\\iker lopez carrillo\\Documents\\NetBeansProjects\\Equipo2_CRUDapp_Server\\src\\java\\equipo2_crudapp_server\\ciphering\\private.key"));
             KeyFactory keyFactory = KeyFactory.getInstance("RSA");
             PrivateKey privateKey = keyFactory.generatePrivate(spec);
 
             Cipher cipher = Cipher.getInstance("RSA");
             cipher.init(Cipher.DECRYPT_MODE, privateKey);
-            decodedMessage = cipher.doFinal(text);
+            decodedMessage = cipher.doFinal(hexToByte(text));
         } catch (InvalidKeyException | NoSuchAlgorithmException | InvalidKeySpecException | BadPaddingException | IllegalBlockSizeException | NoSuchPaddingException exception) {
             LOGGER.warning("There was an error trying to decipher the text. " + exception.getClass() + " " + exception.getMessage());
         }
@@ -104,24 +104,44 @@ public class CipheringManager {
         return decodedMessage;
     }
 
+    /*
+    
     /**
-     * This method converts the ciphered text received to an hexadecimal String.
+     * This method converts the byte array text received to hexadecimal String.
      *
-     * @param cipheredText text to convert.
+     * @param byteText byte array text to convert.
      * @return converted text in hexadecimal.
      */
-    private static String hexadecimalConverter(byte[] cipheredText) {
-        String HEX = "";
-        for (int i = 0; i < cipheredText.length; i++) {
-            String h = Integer.toHexString(cipheredText[i] & 0xFF);
+    private static String byteToHex(byte[] byteText) {
+        String hexText = "";
+        for (int i = 0; i < byteText.length; i++) {
+            String h = Integer.toHexString(byteText[i] & 0xFF);
             if (h.length() == 1) {
-                HEX += "0";
+                hexText += "0";
             }
-            HEX += h;
+            hexText += h;
         }
-        return HEX.toUpperCase();
+        return hexText.toUpperCase();
     }
 
+    /**
+     * This method converts the hexadecimal string text received to byte array.
+     *
+     * @param hexText hexadecimal text to convert.
+     * @return converted text in byte array.
+     */
+    private static byte[] hexToByte(String hexText) {
+        if (hexText.length() % 2 == 1) {
+            hexText = 0 + hexText;
+        }
+        byte[] byteText = new byte[hexText.length() / 2];
+        for (int i = 0; i < hexText.length(); i += 2) {
+            byteText[i / 2] = (byte) ((Character.digit(hexText.charAt(i), 16) << 4)
+                    + Character.digit(hexText.charAt(i + 1), 16));
+        }
+        return byteText;
+    }
+    
     /**
      * This method reads the file in the path it receives and returns it as a
      * byte array.
@@ -135,7 +155,7 @@ public class CipheringManager {
         InputStream in = null;
 
         try {
-            byte[] buffer = new byte[4096];
+            byte[] buffer = new byte[256];
             out = new ByteArrayOutputStream();
             in = new FileInputStream(file);
             int read = 0;

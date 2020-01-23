@@ -50,10 +50,6 @@ public class KeyGenerator extends Application{
             fileOutputStream = new FileOutputStream("private.key");
             fileOutputStream.write(pKCS8EncodedKeySpec.getEncoded());
             fileOutputStream.close();
-            
-            fileOutputStream = new FileOutputStream("credentials.dat");
-            fileOutputStream.write(CipheringManager.cipherText("abcd*1234"));
-            fileOutputStream.close();
         } catch (IOException | NoSuchAlgorithmException exception) {
             LOGGER.warning("There was an error while trying to generate the keys. " + exception.getMessage());
         } finally {
