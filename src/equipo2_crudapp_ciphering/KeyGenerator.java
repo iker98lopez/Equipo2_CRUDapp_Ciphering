@@ -77,6 +77,11 @@ public class KeyGenerator extends Application{
     public void start(Stage primaryStage) throws Exception {
         KeyGenerator keyGenerator = new KeyGenerator();
         keyGenerator.generateKeyPair();
+       
+        String password = "abcd*1234";
+        FileOutputStream fileOutputStream = new FileOutputStream("credentials.dat");
+        fileOutputStream.write(ClientCipher.cipherText(password.getBytes()));
+        fileOutputStream.close();
         
         LOGGER.info("Key pair generated successfully");
         

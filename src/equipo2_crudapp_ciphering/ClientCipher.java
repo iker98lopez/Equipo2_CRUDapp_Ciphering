@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -40,58 +41,25 @@ public class ClientCipher {
      * @param text String to cipher.
      * @return ciphered String.
      */
-    public static String cipherText(String text) {
+    public static byte[] cipherText(byte[] text) {
         byte[] encodedMessage = null;
         try {
-            X509EncodedKeySpec spec = new X509EncodedKeySpec(fileReader("C:\\Users\\iker lopez carrillo\\Documents\\NetBeansProjects\\Equipo2_CRUDapp_Server\\src\\java\\equipo2_crudapp_server\\ciphering\\public.key"));
-            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-            PublicKey publicKey = keyFactory.generatePublic(spec);
+            byte fileKey[] = fileReader("public.key");
 
-            Cipher cipher = Cipher.getInstance("RSA");
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(fileKey);
+            PublicKey publicKey = keyFactory.generatePublic(keySpec);
+
+            Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
             cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-            encodedMessage = cipher.doFinal(hexToByte(text));
+            encodedMessage = cipher.doFinal(text);
         } catch (InvalidKeyException | NoSuchAlgorithmException | InvalidKeySpecException | BadPaddingException | IllegalBlockSizeException | NoSuchPaddingException exception) {
             LOGGER.warning("There was an error trying to cipher the text. " + exception.getClass() + " " + exception.getMessage());
         }
-        return byteToHex(encodedMessage);
-    }
-    
-    /**
-     * This method converts the byte array text received to hexadecimal String.
-     *
-     * @param byteText byte array text to convert.
-     * @return converted text in hexadecimal.
-     */
-    private static String byteToHex(byte[] byteText) {
-        String hexText = "";
-        for (int i = 0; i < byteText.length; i++) {
-            String h = Integer.toHexString(byteText[i] & 0xFF);
-            if (h.length() == 1) {
-                hexText += "0";
-            }
-            hexText += h;
-        }
-        return hexText.toUpperCase();
+
+        return encodedMessage;
     }
 
-    /**
-     * This method converts the hexadecimal string text received to byte array.
-     *
-     * @param hexText hexadecimal text to convert.
-     * @return converted text in byte array.
-     */
-    private static byte[] hexToByte(String hexText) {
-        if (hexText.length() % 2 == 1) {
-            hexText = 0 + hexText;
-        }
-        byte[] byteText = new byte[hexText.length() / 2];
-        for (int i = 0; i < hexText.length(); i += 2) {
-            byteText[i / 2] = (byte) ((Character.digit(hexText.charAt(i), 16) << 4)
-                    + Character.digit(hexText.charAt(i + 1), 16));
-        }
-        return byteText;
-    }
-    
     /**
      * This method reads the file in the path it receives and returns it as a
      * byte array.
