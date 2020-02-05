@@ -78,7 +78,13 @@ public class KeyGenerator extends Application {
         KeyGenerator keyGenerator = new KeyGenerator();
         keyGenerator.generateKeyPair();
 
+        String sender = "noreply.ofertapps";
         String password = "abcd*1234";
+        
+        FileOutputStream senderOutputStream = new FileOutputStream("sender.dat");
+        senderOutputStream.write(ClientCipher.cipherText(sender.getBytes()));
+        senderOutputStream.close();
+        
         FileOutputStream fileOutputStream = new FileOutputStream("credentials.dat");
         fileOutputStream.write(ClientCipher.cipherText(password.getBytes()));
         fileOutputStream.close();
